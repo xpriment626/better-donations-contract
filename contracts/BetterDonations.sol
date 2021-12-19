@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 contract BetterDonations 
 
 {
-    address[] public contributors;
+    mapping(address => bool) contributors;
     address payable private nonProfit;
     address private charityRepresentative;
     address private orgRepresentative;
@@ -18,9 +18,22 @@ contract BetterDonations
         verificationCode = _verify;
     }
 
-        function donate() payable public
+        function signIn(address _input) public 
         {
-            contributors.push(msg.sender);
+            require(_input == msg.sender, "Please use your own address");
+            contributors[_input] = true;
+        }
+    
+        function donate() public requireSignIn() payable {}
+
+        function getBalance() public view returns(uint256)
+        {
+            return address(this).balance;
+        }
+
+        function verifyDoner(address _verify) public view
+        {
+            require(contributors[_verify] == true, "This address has not contributed");
         }
 
         function getBalance() public view returns(uint256)
@@ -39,5 +52,11 @@ contract BetterDonations
             require(msg.sender == nonProfit, 'ONLY the NPO can initialise fund transfer');
             _;
         }
+
+        modifier requireSignIn()
+        {
+            require(contributors[msg.sender] == true, "Sign in to donate");
+            _;
+        } 
 
 }
